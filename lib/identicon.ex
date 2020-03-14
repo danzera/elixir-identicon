@@ -54,29 +54,38 @@ defmodule Identicon do
 	# end
 
 	@doc """
-	Get grid values from a given `Identicon.Image` struct based on its `hex` property value.
+	Generate a new `Identicon.Image` struct complete with grid values based on the given images `hex` value.
 	"""
 	def create_grid(%Identicon.Image{hex: hex_list} = image) do
-		grid = hex_list
-		|> Enum.chunk_every(3, 3, :discard) # hex_list automatically inserted as the first argument of chunk_every# passing a function reference in Elixir requires the use of an ampersand, the name of the function
-		# chunked list automatically passed to Enum.map as the first argument
-		# passing a function reference in Elixir requires the use of an ampersand and the name of the function followed by /number_of_arguments
-		# the function is run for each element of the given collection (chunked list in this case), and a new list is generated
-		|> Enum.map(&mirror_row/1)
-		# thinking ahead, we want a data structure that will be suitable for generating the Identicon image
-		# this way we won't have to do any kind of nested iteration, just a single iteration
-		# list generated from Enum.map above is automatically piped into List.flatten
-		|> List.flatten # take a nest list (list of lists) and "flatten" it into a single list
+		# conventional formatting for assigning a variable while using the pipe operator
+		grid =
+			hex_list
+			|> Enum.chunk_every(3, 3, :discard) # hex_list automatically inserted as the first argument of chunk_every# passing a function reference in Elixir requires the use of an ampersand, the name of the function
+			# chunked list automatically passed to Enum.map as the first argument
+			# passing a function reference in Elixir requires the use of an ampersand and the name of the function followed by /number_of_arguments
+			# the function is run for each element of the given collection (chunked list in this case), and a new list is generated
+			|> Enum.map(&mirror_row/1)
+			# thinking ahead, we want a data structure that will be suitable for generating the Identicon image
+			# this way we won't have to do any kind of nested iteration, just a single iteration
+			# list generated from Enum.map above is automatically piped into List.flatten
+			|> List.flatten # take a nest list (list of lists) and "flatten" it into a single list
+			# we're going to need to know what index each element is at in our list in order to generate the image
+			# helper method with_index takes a list of elements and generates a new list of tuples of the form [{val0, 0}, {val1, 1}, {val2, 2}, ...] with the second value in the tuple indicating the index
+			|> Enum.with_index
 		
 		%{image | grid: grid}
 	end
 
 	@doc """
-	Takes a "row" (list) and mirrors it.
+	Takes a list `row` and generates a new, mirrored list.
+
+		## Examples
+			iex> row = [114, 179, 2]
+			iex> Identicon.mirror_row(row)
+			[114, 179, 2, 179, 114]
 	"""
 	def mirror_row([a, b | _tail] = row) do
-		# given row [114, 179, 2]
-		row ++ [b, a] # result [114, 179, 2, 179, 114]
+		row ++ [b, a]
 	end
 
 end
