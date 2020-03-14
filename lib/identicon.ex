@@ -28,10 +28,14 @@ defmodule Identicon do
 
 		%Identicon.Image{hex: hex}
 	end
-
-	def pick_color(image) do
-		# pattern matching of Identicon.Image structs, then pulling off the first 3 values from the hex property of the image argument
-		%Identicon.Image{hex: [r, g, b | _tail]} = image # hex property from image gets pattern matched to [r, g, b | _tail]
+	
+	@doc """
+	Get rgb values from a given `Identicon.Image` struct based on its `hex` property value.
+	"""
+	# pattern matching can be done at the argument level of a function
+	# matching done here with Identicon.Image struct, first 3 values then pulled from the hex property of the image argument
+	# NOTE: original image argument can still be referenced within the body of the function (and is done so below)
+	def pick_color(%Identicon.Image{hex: [r, g, b | _tail]} = image) do # hex property from image gets pattern matched to [r, g, b | _tail]
 		# above step done more verbosely:
 		# %Identicon.Image{hex: hex_list} = image
 		# [r, g, b | _tail] = hex_list
