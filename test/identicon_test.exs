@@ -21,8 +21,19 @@ defmodule IdenticonTest do
 	test "pizza squares...generate grid values for Identicon.Image" do
 		input = "pizza"
 		expected_grid = [{124,0},{242,1},{219,2},{242,3},{124,4},{94,5},{194,6},{97,7},{194,8},{94,9},{160,10},{250,11},{39,12},{250,13},{160,14},{165,15},{2,16},{211,17},{2,18},{165,19},{25,20},{106,21},{111,22},{106,23},{25,24}]
-		
+
 		image = Identicon.create_grid(Identicon.hash_input(input))
 		assert image.grid == expected_grid
+	end
+
+	test "half eaten pizza...filter grid values to only its even values" do
+		_input = "pizza"
+		grid = [{124,0},{242,1},{219,2},{242,3},{124,4},{94,5},{194,6},{97,7},{194,8},{94,9},{160,10},{250,11},{39,12},{250,13},{160,14},{165,15},{2,16},{211,17},{2,18},{165,19},{25,20},{106,21},{111,22},{106,23},{25,24}]
+		filtered_grid = [{124,0},{242,1},{242,3},{124,4},{94,5},{194,6},{194,8},{94,9},{160,10},{250,11},{250,13},{160,14},{2,16},{2,18},{106,21},{106,23}]		
+		image =
+			%Identicon.Image{grid: grid}
+			|> Identicon.filter_grid
+
+		assert filtered_grid == image.grid
 	end
 end

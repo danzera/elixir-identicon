@@ -7,9 +7,13 @@ defmodule Identicon do
   """
   def main(input) do
 		input # "pipe" input into the hash_input method
-		|> hash_input # will automatically pass the rusulting struct onto pick_color
+		|> hash_input # will automatically pipe the rusulting struct into pick_color
 		|> pick_color
 		|> create_grid
+		|> filter_grid
+		|> build_pixel_map
+		|> draw_image
+		|> save_image(input) # first argument piped in from draw_image, original input is the second argument of save_image
 	end
 
 	@doc """
@@ -86,6 +90,58 @@ defmodule Identicon do
 	"""
 	def mirror_row([a, b | _tail] = row) do
 		row ++ [b, a]
+	end
+
+	@doc """
+	Filter the `grid` property of the given `Identicon.Image` struct to only its even values. These are the values/indicies that will denote colored squares in the Identicon.
+	"""
+	def filter_grid(%Identicon.Image{grid: grid} = image) do
+		adjusted_grid =
+			# parens can be omitted from Enum.filter
+			# conventionally they are omitted when using a function in the arguments
+			# and function body is put on a new line as is shown here
+			Enum.filter grid, fn {x, _i} ->
+				rem(x, 2) == 0
+			end
+
+		%{image | grid: adjusted_grid}
+	end
+
+	@doc """
+	Generate pixel map based on the `grid` property of the given `Identicon.Image`. These are the points that will be used to color in the squares of the Identicon.
+	"""
+	def build_pixel_map(%Identicon.Image{grid: grid} = image) do
+		pixel_map = Enum.map grid, fn {_val, i} ->
+			x = 50 * rem(i, 5)
+			y = 50 * div(i, 5)
+			{{x, y}, {x + 50, y + 50}} # { top left point, bottom right point}
+		end
+
+		# %{} and %Identicon.Image{} are equivalent here since image argument is 
+		%Identicon.Image{image | pixel_map: pixel_map}
+	end
+
+	@doc """
+	Create the actual image based on the given `Identicon.Image` struct.
+	"""
+	# "= image" omitted from args here since we won't need a reference to the input
+	def draw_image(%Identicon.Image{color: color, pixel_map: pixel_map}) do
+		image = :egd.create(250, 250) # create blank canvas image in memory 250px square
+		fill = :egd.color(color) # fill object that egd will use to draw rectangles
+		
+		# iterate through each element in our pixel map
+		Enum.each pixel_map, fn {top_left, bottom_right} ->
+			# NOTE :egd.filledRectangle actually modifies the given image object
+			# 			unlike most other Elixir functions that generate new data without altering existing
+			:egd.filledRectangle(image, top_left, bottom_right, fill)
+		end
+
+		:egd.render(image)
+	end
+
+	def save_image(image, input) do
+		# string interpolation shown here, similar to JavaScript ${}, to inject a variable into a string
+		File.write("#{input}.png", image)
 	end
 
 end
